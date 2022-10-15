@@ -2,7 +2,21 @@ version: 2.1
 
 orbs:
   aws-cli: circleci/aws-cli@2.0.3
-  
+
+commands:
+  destroy_environment:
+    description: Destroy stacks given a workflow ID
+    parameters:
+      workflow_id:
+        type: string
+    steps:
+      - run:
+          name: Destroy backend
+          when: on_fail
+          command: |
+            echo backend-${CIRCLE_WORKFLOW_ID}
+            aws cloudformation delete-stack --stack-name backend-${CIRCLE_WORKFLOW_ID}
+
 jobs:
   build-app:
     docker:
