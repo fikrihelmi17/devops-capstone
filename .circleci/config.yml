@@ -31,7 +31,7 @@ jobs:
               chmod +x /bin/hadolint
             
             # install dependencies
-            pip install --upgrade pip && pip install -r requirements.txt
+            # pip install --upgrade pip && pip install -r requirements.txt
 
       - save_cache:
           paths:
@@ -62,7 +62,7 @@ jobs:
           name: Docker Build
           command: |
             docker build -t fikrihelmi17/udacity-capstone .
-            docker login
+            # docker login
             docker push fikrihelmi17/udacity-capstone
                 
   test-backend:
