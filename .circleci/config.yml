@@ -43,7 +43,7 @@ jobs:
           name: run lint
           command: |
             . venv/bin/activate
-            ./hadolint Dockerfile
+            hadolint Dockerfile
             # This should be run from inside a virtualenv
             pylint --disable=R,C,W1203,W1202,E0611,W1309 app.py 
 
