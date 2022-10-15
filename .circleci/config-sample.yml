@@ -1,0 +1,170 @@
+version: 2.1
+
+orbs:
+  aws-cli: circleci/aws-cli@2.0.3
+  
+jobs:
+  build-app:
+    docker:
+      - image: python:3.7.3-stretch
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "requirements.txt" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+
+      - run:
+          name: setup and install dependencies
+          command: |
+            # using python virtual environment
+            python3 -m venv venv
+            . venv/bin/activate
+            
+            # Install hadolint and change the mode
+            wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/download/v1.16.3/hadolint-Linux-x86_64 &&\
+              chmod +x /bin/hadolint
+            
+            # install dependencies
+            pip install --upgrade pip &&\
+		          pip install -r requirements.txt
+
+      - save_cache:
+          paths:
+            - ./venv
+          key: v1-dependencies-{{ checksum "requirements.txt" }}
+
+      # run lint!
+      - run:
+          name: run lint
+          command: |
+            . venv/bin/activate
+            make lint 
+
+  build-docker:
+    docker:
+      - image: python:3.7.3-stretch
+    steps:
+      - checkout
+      - run:
+          name: Docker Build
+          command: |
+            docker build --tag=udacity-capstone .
+            docker login -u fikrihelmi17 -p 17wordpressGO
+            docker image tag udacity-capstone fikrihelmi17/udacity-capstone
+            docker push fikrihelmi17/udacity-capstone
+                
+  test-backend:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [test-backend]
+      - run:
+          name: Run backend test
+          command: |
+            cd backend
+            npm install
+            npm run test
+
+  deploy-infrastructure:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Install Tar and Gzip
+          command: |
+            yum -y install tar gzip npm
+      - run:
+          name: Ensure back-end infrastructure exists
+          command: |
+            aws cloudformation deploy \
+              --template-file .circleci/files/backend.yml \
+              --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}" \
+              --tags project=udapeople
+      - run:
+          name: Add back-end ip to ansible inventory
+          command: |
+            aws ec2 describe-instances \
+            \
+            --query 'Reservations[*].Instances[*].PublicIpAddress' \
+            --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+            --output text >> .circleci/ansible/inventory.txt
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - project/.circleci/ansible/inventory.txt
+      - destroy_environment:
+          workflow_id: ${CIRCLE_WORKFLOW_ID}
+
+  configure-infrastructure:
+    docker:
+      - image: python:3.7-alpine3.11
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["77:8b:2b:17:b4:21:69:0e:26:ec:43:53:b6:49:f4:4a"]
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update ansible curl
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Configure server
+          command: |
+            ansible-playbook -i .circleci/ansible/inventory.txt .circleci/ansible/configure-server.yml
+      # Here's where you will add some code to rollback on failure 
+
+  deploy-backend:
+    docker:
+      - image: python:3.7-alpine3.11
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["77:8b:2b:17:b4:21:69:0e:26:ec:43:53:b6:49:f4:4a"]
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update ansible curl tar gzip npm
+            apk add --update py3-pip && pip3 install --upgrade pip && pip3 install awscli
+      - run:
+          name: Deploy backend
+          command: |
+            cd backend
+            npm i
+            npm run build
+            cd ..
+            # Zip the directory here
+            tar -C backend -czvf artifact.tar.gz .
+            cd .circleci/ansible
+            echo "Contents of the inventory.txt file is ------"
+            cat inventory.txt
+            ansible-playbook -i inventory.txt deploy-backend.yml
+      - destroy_environment:
+          workflow_id: ${CIRCLE_WORKFLOW_ID}
+
+workflows:
+  default:
+    jobs:
+      - build-app
+      - build-docker:
+          requires: [build-app]
+      - scan-backend:
+          requires: [build-backend]
+      - deploy-infrastructure:
+          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+      - configure-infrastructure:
+          requires: [deploy-infrastructure]
+      - deploy-backend:
+          requires: [run-migrations]

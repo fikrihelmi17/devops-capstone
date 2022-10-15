@@ -1,0 +1,28 @@
+- name: "wait 600 seconds for target connection to become reachable/usable."
+  wait_for_connection:
+- name: Copy backend compressed file 
+  become: true
+  copy:
+    src: ~/project/artifact.tar.gz #/root/project/artifact.tar.gz
+    dest: /home/ubuntu/backend/
+- name: Extract backend files
+  become: true
+  shell: |
+    cd /home/ubuntu/backend
+    tar -vxf artifact.tar.gz
+    rm artifact.tar.gz
+- name: Install dependencies
+  become: true
+  shell: |
+    curl -sL https://deb.nodesource.com/setup_13.x | sudo -E bash -
+    apt-get install -y nodejs
+    npm install -g npm
+    npm install -g pm2
+- name : Compile and start app
+  become : true 
+  shell : | 
+    cd /home/ubuntu/backend
+    sudo npm install
+    sudo killall node
+    pm2 stop default
+    pm2 start npm -- start
