@@ -49,7 +49,7 @@ jobs:
 
   build-docker:
     docker:
-      - image: docker:17.05.0-ce-git
+      - image: docker
     steps:
       - checkout
       - run:
