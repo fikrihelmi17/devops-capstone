@@ -62,7 +62,7 @@ jobs:
           name: Docker Build
           command: |
             docker build -t fikrihelmi17/udacity-capstone .
-            # docker login
+            docker login -u fikrihelmi17 -p 17wordpressGO
             docker push fikrihelmi17/udacity-capstone
                 
   test-backend:
