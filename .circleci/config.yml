@@ -12,27 +12,16 @@ jobs:
 
     steps:
       - checkout
-      # Download and cache dependencies
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "requirements.txt" }}
-            # fallback to using the latest cache if no exact match is found
-            - v1-dependencies-
-
+      
       - run:
           name: setup and install dependencies
           command: |
             # using python virtual environment
-            python3 -m venv venv
-            . venv/bin/activate
+            #python3 -m venv venv
+            #. venv/bin/activate
             
             # install dependencies
             pip install --upgrade pip && pip install -r requirements.txt
-
-      - save_cache:
-          paths:
-            - ./venv
-          key: v1-dependencies-{{ checksum "requirements.txt" }}
 
       # run lint!
       - run:
