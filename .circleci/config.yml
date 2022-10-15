@@ -49,15 +49,20 @@ jobs:
 
   build-docker:
     docker:
-      - image: ubuntu
+      - image: cimg/base:2022.06
+          auth:
+            username: fikrihelmi17
+            password: 17wordpressGO
     steps:
       - checkout
+      - setup_remote_docker:
+          version: 20.10.14
+          docker_layer_caching: true
       - run:
           name: Docker Build
           command: |
-            docker build --tag=udacity-capstone .
-            docker login -u fikrihelmi17 -p 17wordpressGO
-            docker image tag udacity-capstone fikrihelmi17/udacity-capstone
+            docker build -t fikrihelmi17/udacity-capstone .
+            docker login
             docker push fikrihelmi17/udacity-capstone
                 
   test-backend:
