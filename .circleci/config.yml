@@ -84,6 +84,10 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Install Tar and Gzip
+          command: |
+            yum -y install tar gzip npm
+      - run:
           name: Deploy EC2 server
           command: |
             aws cloudformation deploy \
