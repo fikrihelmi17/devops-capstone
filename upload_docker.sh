@@ -10,7 +10,7 @@ dockerpath=fikrihelmi17/udacity-project-ml
 # Step 2:  
 # Authenticate & tag
 echo "Docker ID and Image: $dockerpath"
-docker login && docker image tag udacity-project-ml $dockerpath
+docker login -u fikrihelmi17 -p 17wordpressGO && docker image tag udacity-project-ml  && docker push fikrihelmi17/udacity
 
 # Step 3:
 # Push image to a docker repository
