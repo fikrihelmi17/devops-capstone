@@ -106,7 +106,11 @@ jobs:
       - persist_to_workspace:
           root: ~/
           paths:
-            - project/.circleci/ansible/inventory.txt
+            - .circleci/ansible/inventory.txt
+      - run:
+          name: see the IP
+          command: |
+            cat .circleci/ansible/inventory.txt
       - destroy_environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID}
 
