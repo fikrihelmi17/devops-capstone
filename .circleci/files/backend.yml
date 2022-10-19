@@ -25,7 +25,7 @@ Resources:
   EC2Instance:
     Type: AWS::EC2::Instance
     Properties:
-      InstanceType: t3.micro
+      InstanceType: t3.medium
       SecurityGroups:
         - Ref: InstanceSecurityGroup
       KeyName: udacity-capstone-devops
@@ -48,7 +48,12 @@ Resources:
           echo "Installing Minikube"
           curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
           sudo install minikube-linux-amd64 /usr/local/bin/minikube
-          minikube start
+          echo "docker to root"
+          sudo groupadd docker
+          sudo usermod -aG docker $USER
+          newgrp docker
+          echo "start the kubernetes cluster"
+          minikube start --driver=docker
           alias kubectl="minikube kubectl --"
           minikube kubectl -- get po -A
 
