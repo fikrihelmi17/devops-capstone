@@ -114,55 +114,58 @@ jobs:
       - destroy_environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID}
 
-  configure-infrastructure:
-    docker:
-      - image: python:3.7-alpine3.11
-    steps:
-      - checkout
-      - add_ssh_keys:
-          fingerprints: ["c1:d0:69:a3:17:0c:79:84:a2:5f:d2:c6:5b:93:96:16"]
-      - run:
-          name: Install dependencies
-          command: |
-            apk add --update ansible curl
-      - attach_workspace:
-          at: ~/
-      - run:
-          name: Configure server
-          command: |
-            export ANSIBLE_HOST_KEY_CHECKING=False
-            export RECORD_HOST_KEYS=True
-            ansible-playbook -i .circleci/ansible/inventory.txt .circleci/ansible/configure-server.yml
+  #configure-infrastructure:
+  #  docker:
+  #    - image: python:3.7-alpine3.11
+  #  steps:
+  #    - checkout
+  #    - add_ssh_keys:
+  #        fingerprints: 
+  #          - "c1:d0:69:a3:17:0c:79:84:a2:5f:d2:c6:5b:93:96:16"
+  #    - run:
+  #        name: Install dependencies
+  #        command: |
+  #          apk add --update ansible curl
+  #    - attach_workspace:
+  #        at: ~/
+  #    - run:
+  #        name: Configure server
+  #        command: |
+  #          cat /home/circleci/.ssh/config
+  #          export ANSIBLE_HOST_KEY_CHECKING=False
+  #          export RECORD_HOST_KEYS=True
+  #          export transport.banner_timeout = 300
+  #          ansible-playbook -i .circleci/ansible/inventory.txt .circleci/ansible/configure-server.yml
 
-  deploy-backend:
-    docker:
-      - image: python:3.7-alpine3.11
-    steps:
-      - checkout
-      - add_ssh_keys:
-          fingerprints: ["77:8b:2b:17:b4:21:69:0e:26:ec:43:53:b6:49:f4:4a"]
-      - attach_workspace:
-          at: ~/
-      - run:
-          name: Install dependencies
-          command: |
-            apk add --update ansible curl tar gzip npm
-            apk add --update py3-pip && pip3 install --upgrade pip && pip3 install awscli
-      - run:
-          name: Deploy backend
-          command: |
-            cd backend
-            npm i
-            npm run build
-            cd ..
-            # Zip the directory here
-            tar -C backend -czvf artifact.tar.gz .
-            cd .circleci/ansible
-            echo "Contents of the inventory.txt file is ------"
-            cat inventory.txt
-            ansible-playbook -i inventory.txt deploy-backend.yml
-      - destroy_environment:
-          workflow_id: ${CIRCLE_WORKFLOW_ID}
+  #deploy-backend:
+  #  docker:
+  #    - image: python:3.7-alpine3.11
+  #  steps:
+  #    - checkout
+  #    - add_ssh_keys:
+  #        fingerprints: ["77:8b:2b:17:b4:21:69:0e:26:ec:43:53:b6:49:f4:4a"]
+  #    - attach_workspace:
+  #        at: ~/
+  #    - run:
+  #        name: Install dependencies
+  #        command: |
+  #          apk add --update ansible curl tar gzip npm
+  #          apk add --update py3-pip && pip3 install --upgrade pip && pip3 install awscli
+  #    - run:
+  #        name: Deploy backend
+  #        command: |
+  #          cd backend
+  #          npm i
+  #          npm run build
+  #          cd ..
+  #          # Zip the directory here
+  #          tar -C backend -czvf artifact.tar.gz .
+  #          cd .circleci/ansible
+  #          echo "Contents of the inventory.txt file is ------"
+  #          cat inventory.txt
+  #          ansible-playbook -i inventory.txt deploy-backend.yml
+  #    - destroy_environment:
+  #        workflow_id: ${CIRCLE_WORKFLOW_ID}
 
 workflows:
   default:
@@ -172,7 +175,7 @@ workflows:
           requires: [build-app]
       - deploy-infrastructure:
           requires: [build-docker]
-      - configure-infrastructure:
-          requires: [deploy-infrastructure]
+      #- configure-infrastructure:
+      #    requires: [deploy-infrastructure]
       #- deploy-backend:
       #    requires: [run-migrations]
