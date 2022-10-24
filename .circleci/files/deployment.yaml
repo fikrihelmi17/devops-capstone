@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: udacity-project-deployment
+  labels:
+    app: udacity
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: udacity
+  template:
+    metadata:
+      labels:
+        app: udacity
+    spec:
+      containers:
+      - name: udacity
+        image: fikrihelmi17/udacity-project-ml
+        ports:
+        - containerPort: 80

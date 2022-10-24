@@ -101,6 +101,42 @@ jobs:
       - destroy_environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID}
   
+  #deploy-infrastructure-with-eksctl:
+  #  docker:
+  #    - image: amazon/aws-cli
+  #  steps:
+  #    - checkout
+  #    - run:
+  #        name: Install Tar and Gzip
+  #        command: |
+  #          yum -y install tar gzip npm
+  #    - run:
+  #        name: install kubectl
+  #        command: |
+  #          curl -o kubectl https://s3.us-west-2.amazonaws.com/amazon-eks/1.23.7/2022-06-29/bin/linux/amd64/kubectl
+  #          chmod +x ./kubectl
+  #          mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$PATH:$HOME/bin
+  #          kubectl version --short --client
+  #    - run:
+  #        name: install eksctl
+  #        command: |
+  #          curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+  #          sudo mv /tmp/eksctl /usr/local/bin
+  #          eksctl version
+  #    - run:
+  #        name: install eks cluster
+  #        no_output_timeout: 30m
+  #        command: |
+  #          eksctl create cluster --name eksctl-demo --region=ap-southeast-1
+  #          eksctl utils describe-stacks --region=ap-southeast-1 --cluster=eksctl-demo
+  #          eksctl get cluster --name=eksctl-demo --region=ap-southeast-1
+  #          kubectl get nodes
+  #          kubectl create deploy python-helloworld --image=sudkul/python-helloworld:v1.0.0
+  #          kubectl get deploy,rs,svc,pods
+  #          kubectl port-forward pod/python-helloworld-84857d9565-2598m --address 0.0.0.0 5000:5000
+  #    - destroy_environment:
+  #        workflow_id: ${CIRCLE_WORKFLOW_ID}
+  
   configure-infrastructure:
     docker:
       - image: amazon/aws-cli
@@ -126,9 +162,14 @@ jobs:
       - run:
           name: Access the Kubernetes cluster
           command: |
-            aws eks update-kubeconfig --name udacity-capstone
+            aws eks update-kubeconfig --name udacity-capstone-${CIRCLE_WORKFLOW_ID:0:7}
             kubectl get nodes
-
+            kubectl apply -f .circleci/files/deployment.yaml
+            kubectl get deployment
+            kubectl get pods
+            kubectl create -f .circleci/files/service.yaml
+            kubectl get services
+            
 workflows:
   default:
     jobs:
@@ -137,3 +178,5 @@ workflows:
           requires: [build-app]
       - deploy-infrastructure:
           requires: [build-docker]
+      - configure-infrastructure:
+          requires: [deploy-infrastructure]
