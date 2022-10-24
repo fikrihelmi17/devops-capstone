@@ -14,8 +14,8 @@ commands:
           name: Destroy infrastructure
           when: on_fail
           command: |
-            echo backend-${CIRCLE_WORKFLOW_ID}
-            aws cloudformation delete-stack --stack-name backend-${CIRCLE_WORKFLOW_ID}
+            echo udacity-capstone-${CIRCLE_WORKFLOW_ID}
+            aws cloudformation delete-stack --stack-name udacity-capstone-${CIRCLE_WORKFLOW_ID:0:7}
 
 jobs:
   build-app:
@@ -88,84 +88,45 @@ jobs:
           command: |
             yum -y install tar gzip npm
       - run:
-          name: Deploy EC2 server
+          name: Deploy the Kubernetes Cluster
           command: |
             aws cloudformation deploy \
-              --template-file .circleci/files/backend.yml \
+              --template-file .circleci/files/eks.yaml \
               --stack-name "udacity-capstone-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}" \
-              --tags project=udacity
-      - run:
-          name: Add back-end ip to ansible inventory
-          command: |
-            aws ec2 describe-instances \
-            \
-            --query 'Reservations[*].Instances[*].PublicIpAddress' \
-            --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-            --output text >> .circleci/ansible/inventory.txt
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - project/.circleci/ansible/inventory.txt
-      - run:
-          name: see the IP
-          command: |
-            cat .circleci/ansible/inventory.txt
+              --tags project=udacity-capstone \
+              --capabilities CAPABILITY_IAM \
+              --no-fail-on-empty-changeset
       - destroy_environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID}
-
-  #configure-infrastructure:
-  #  docker:
-  #    - image: python:3.7-alpine3.11
-  #  steps:
-  #    - checkout
-  #    - add_ssh_keys:
-  #        fingerprints: 
-  #          - "c1:d0:69:a3:17:0c:79:84:a2:5f:d2:c6:5b:93:96:16"
-  #    - run:
-  #        name: Install dependencies
-  #        command: |
-  #          apk add --update ansible curl
-  #    - attach_workspace:
-  #        at: ~/
-  #    - run:
-  #        name: Configure server
-  #        command: |
-  #          cat /home/circleci/.ssh/config
-  #          export ANSIBLE_HOST_KEY_CHECKING=False
-  #          export RECORD_HOST_KEYS=True
-  #          export transport.banner_timeout = 300
-  #          ansible-playbook -i .circleci/ansible/inventory.txt .circleci/ansible/configure-server.yml
-
-  #deploy-backend:
-  #  docker:
-  #    - image: python:3.7-alpine3.11
-  #  steps:
-  #    - checkout
-  #    - add_ssh_keys:
-  #        fingerprints: ["77:8b:2b:17:b4:21:69:0e:26:ec:43:53:b6:49:f4:4a"]
-  #    - attach_workspace:
-  #        at: ~/
-  #    - run:
-  #        name: Install dependencies
-  #        command: |
-  #          apk add --update ansible curl tar gzip npm
-  #          apk add --update py3-pip && pip3 install --upgrade pip && pip3 install awscli
-  #    - run:
-  #        name: Deploy backend
-  #        command: |
-  #          cd backend
-  #          npm i
-  #          npm run build
-  #          cd ..
-  #          # Zip the directory here
-  #          tar -C backend -czvf artifact.tar.gz .
-  #          cd .circleci/ansible
-  #          echo "Contents of the inventory.txt file is ------"
-  #          cat inventory.txt
-  #          ansible-playbook -i inventory.txt deploy-backend.yml
-  #    - destroy_environment:
-  #        workflow_id: ${CIRCLE_WORKFLOW_ID}
+  
+  configure-infrastructure:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Install Tar and Gzip
+          command: |
+            yum -y install tar gzip npm
+      - run:
+          name: install kubectl
+          command: |
+            curl -o kubectl https://s3.us-west-2.amazonaws.com/amazon-eks/1.23.7/2022-06-29/bin/linux/amd64/kubectl
+            chmod +x ./kubectl
+            mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$PATH:$HOME/bin
+            kubectl version --short --client
+      - run:
+          name: install eksctl
+          command: |
+            curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+            sudo mv /tmp/eksctl /usr/local/bin
+            eksctl version
+      - run:
+          name: Access the Kubernetes cluster
+          command: |
+            aws eks update-kubeconfig --name udacity-capstone
+            kubectl get nodes
 
 workflows:
   default:
@@ -175,7 +136,3 @@ workflows:
           requires: [build-app]
       - deploy-infrastructure:
           requires: [build-docker]
-      #- configure-infrastructure:
-      #    requires: [deploy-infrastructure]
-      #- deploy-backend:
-      #    requires: [run-migrations]
