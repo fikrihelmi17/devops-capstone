@@ -89,6 +89,7 @@ jobs:
             yum -y install tar gzip npm
       - run:
           name: Deploy the Kubernetes Cluster
+          no_output_timeout: 30m
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/eks.yaml \
