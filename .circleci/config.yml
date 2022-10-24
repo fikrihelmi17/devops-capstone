@@ -147,13 +147,6 @@ jobs:
           command: |
             yum -y install tar gzip npm
       - run:
-          name: install kubectl
-          command: |
-            curl -o kubectl https://s3.us-west-2.amazonaws.com/amazon-eks/1.23.7/2022-06-29/bin/linux/amd64/kubectl
-            chmod +x ./kubectl
-            mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$PATH:$HOME/bin
-            kubectl version --short --client
-      - run:
           name: install eksctl
           command: |
             curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
@@ -163,6 +156,10 @@ jobs:
           name: Access the Kubernetes cluster
           command: |
             aws eks update-kubeconfig --name udacity-capstone-${CIRCLE_WORKFLOW_ID:0:7}
+            curl -o kubectl https://s3.us-west-2.amazonaws.com/amazon-eks/1.23.7/2022-06-29/bin/linux/amd64/kubectl
+            chmod +x ./kubectl
+            mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$PATH:$HOME/bin
+            kubectl version --short --client
             kubectl get nodes
             kubectl apply -f .circleci/files/deployment.yaml
             kubectl get deployment
