@@ -65,7 +65,7 @@ jobs:
       - image: cimg/base:2022.06
         auth:
           username: fikrihelmi17
-          password: 17wordpressGO
+          password: $PASSWORD_DOCKER_HUB
     steps:
       - checkout
       - setup_remote_docker:
@@ -75,7 +75,7 @@ jobs:
           name: Docker Build
           command: |
             docker build -t fikrihelmi17/udacity-capstone .
-            docker login -u fikrihelmi17 -p 17wordpressGO
+            echo $PASSWORD_DOCKER_HUB | docker login -u fikrihelmi17 --password-stdin
             docker push fikrihelmi17/udacity-capstone
 
   deploy-infrastructure:
