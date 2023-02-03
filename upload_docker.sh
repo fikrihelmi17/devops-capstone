@@ -8,7 +8,7 @@
 dockerpath=fikrihelmi17/devops-capstone
 
 # Step 2:  
-# Authenticate
+# Authentication
 echo $PASSWORD_DOCKER_HUB | docker login -u fikrihelmi17 --password-stdin
 
 # Step 3:
