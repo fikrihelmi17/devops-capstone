@@ -4,7 +4,7 @@ Parameters:
   EKSClusterName:
     Type: String
     Description: Name of k8s cluster
-    Default: udacity-capstone
+    Default: devops-capstone
   NumWorkerNodes:
     Type: Number
     Description: Number of worker nodes to create
@@ -16,7 +16,7 @@ Parameters:
   KeyPairName:
     Type: String
     Description: Name of an existing EC2 key pair (for SSH-access to the worker node instances)
-    Default: udacity-capstone-devops
+    Default: devops-capstone
 Mappings:
   VpcIpRanges:
     Option1:
