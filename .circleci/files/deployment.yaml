@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: udacity-project-deployment
+  name: project-deployment
   labels:
-    app: udacity
+    app: devops-capstone
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: udacity
+      app: devops-capstone
   template:
     metadata:
       labels:
-        app: udacity
+        app: devops-capstone
     spec:
       containers:
-      - name: udacity
-        image: fikrihelmi17/udacity-project-ml
+      - name: devops-capstone
+        image: fikrihelmi17/devops-capstone
         ports:
         - containerPort: 80

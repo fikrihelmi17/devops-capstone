@@ -14,8 +14,8 @@ commands:
           name: Destroy infrastructure
           when: on_fail
           command: |
-            echo udacity-capstone-${CIRCLE_WORKFLOW_ID}
-            aws cloudformation delete-stack --stack-name udacity-capstone-${CIRCLE_WORKFLOW_ID:0:7}
+            echo devops-capstone-${CIRCLE_WORKFLOW_ID}
+            aws cloudformation delete-stack --stack-name devops-capstone-${CIRCLE_WORKFLOW_ID:0:7}
 
 jobs:
   build-app:
@@ -74,9 +74,9 @@ jobs:
       - run:
           name: Docker Build
           command: |
-            docker build -t fikrihelmi17/udacity-capstone .
+            docker build -t fikrihelmi17/devops-capstone .
             echo $PASSWORD_DOCKER_HUB | docker login -u fikrihelmi17 --password-stdin
-            docker push fikrihelmi17/udacity-capstone
+            docker push fikrihelmi17/devops-capstone
 
   deploy-infrastructure:
     docker:
@@ -93,9 +93,9 @@ jobs:
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/eks.yaml \
-              --stack-name "udacity-capstone-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --stack-name "devops-capstone-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}" \
-              --tags project=udacity-capstone \
+              --tags project=devops-capstone \
               --capabilities CAPABILITY_IAM \
               --no-fail-on-empty-changeset
       - destroy_environment:
@@ -155,7 +155,7 @@ jobs:
       - run:
           name: Access the Kubernetes cluster
           command: |
-            aws eks update-kubeconfig --name udacity-capstone-${CIRCLE_WORKFLOW_ID:0:7}
+            aws eks update-kubeconfig --name devops-capstone-${CIRCLE_WORKFLOW_ID:0:7}
             curl -o kubectl https://s3.us-west-2.amazonaws.com/amazon-eks/1.23.7/2022-06-29/bin/linux/amd64/kubectl
             chmod +x ./kubectl
             mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$PATH:$HOME/bin
