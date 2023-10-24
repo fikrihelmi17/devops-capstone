@@ -1,6 +1,6 @@
 [![fikrihelmi17](https://circleci.com/gh/fikrihelmi17/devops-capstone.svg?style=svg)](https://circleci.com/gh/fikrihelmi17/devops-capstone)
 
-## Summary of the Project
+## Summary of this Project
 
 This is a Project for Capstone in the DevOps Engineer Nanodegree Program. This project allow me to apply the skills to operationalize a Machine Learning Microservice API.
 
